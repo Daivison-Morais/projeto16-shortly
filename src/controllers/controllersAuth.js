@@ -3,6 +3,8 @@ import joi from "joi";
 import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcrypt";
 
+const token = uuidv4();
+
 const postSignupSchema = joi.object({
   name: joi.string().required(),
   email: joi.string().email().required(),
@@ -32,7 +34,6 @@ async function postSignup(req, res) {
     }
 
     const passwordEncrypted = bcrypt.hashSync(password, 10);
-    console.log(passwordEncrypted);
 
     await connection.query(
       `INSERT INTO users (name, email, password) VALUES ($1, $2, $3);`,
@@ -46,8 +47,43 @@ async function postSignup(req, res) {
   }
 }
 
+const postSigninSchema = joi.object({
+  email: joi.string().email().required(),
+  password: joi.string().required(),
+});
+
 async function getSignin(req, res) {
   const { email, password } = req.body;
+
+  const validation = postSigninSchema.validate(req.body, { abortEarly: false });
+  if (validation.error) {
+    const errors = validation.error.details.map((value) => value.message);
+    return res.status(422).send(errors);
+  }
+
+  try {
+    const findUser = (
+      await connection.query(`SELECT * FROM users WHERE email = $1;`, [email])
+    ).rows;
+
+    if (findUser.length === 0) {
+      return res.status(401).send({ error: "usuário não encontrado" });
+    }
+    const isValid = bcrypt.compareSync(password, findUser[0].password);
+    if (!isValid) {
+      return res.status(401).send({ error: "Senha inválida" });
+    }
+
+    await connection.query(
+      `INSERT INTO sessions ("userId", token) VALUES ($1, $2);`,
+      [findUser[0].id, token]
+    );
+
+    res.status(200).send({ token });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
 }
 
 export { postSignup, getSignin };
