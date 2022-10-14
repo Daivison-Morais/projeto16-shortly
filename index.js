@@ -1,7 +1,12 @@
 import express from "express";
 import cors from "cors";
 import { postSignup, getSignin } from "./src/controllers/controllersAuth.js";
-import { postShorten, getOneUrl } from "./src/controllers/controllersUrls.js";
+import {
+  postShorten,
+  getOneUrl,
+  getOpenUrl,
+  deleteUrl,
+} from "./src/controllers/controllersUrls.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -14,6 +19,9 @@ app.post("/signin", getSignin);
 
 app.post("/urls/shorten", postShorten);
 app.get("/urls/:id", getOneUrl);
+app.get("/urls/open/:shortUrl", getOpenUrl);
+
+app.delete("/urls/:id", deleteUrl);
 
 app.get("/status", async (req, res) => {
   res.send("ooooook");
