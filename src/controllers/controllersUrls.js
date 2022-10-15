@@ -1,40 +1,27 @@
 import connection from "../conectionPG.js";
-import joi from "joi";
-import { v4 as uuidv4 } from "uuid";
-import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
 
-const postShortenSchema = joi.object({
-  url: joi.string().uri().required(),
-});
-
 async function postShorten(req, res) {
-  const { url } = req.body;
-
-  const validation = postShortenSchema.validate({ url });
-  if (validation.error) {
-    const error = validation.error.details[0].message;
-    return res.status(422).send(error);
-  }
-
-  const token = req.headers.authorization?.replace("Bearer ", "");
-  if (!token) {
-    return res.sendStatus(401);
-  }
+  const token = res.locals.token;
+  const url = res.locals.url;
 
   const newUrl = nanoid(8);
 
   try {
-    const { userId } = (
+    const userId = (
       await connection.query(
         `SELECT "userId" FROM sessions WHERE token = $1;`,
         [token]
       )
-    ).rows[0];
+    ).rows;
+
+    if (userId.length === 0) {
+      return res.send({ error: "usuário não encontrado" });
+    }
 
     await connection.query(
       `INSERT INTO urls (url, "shortUrl", "userId") VALUES ($1, $2, $3)`,
-      [url, newUrl, userId]
+      [url, newUrl, userId[0].userId]
     );
 
     res.status(201).send({ shortUrl: newUrl });
@@ -72,13 +59,12 @@ async function getOpenUrl(req, res) {
     }
 
     const numberVisits = shortUrlExist.rows[0].visits + 1;
-
     await connection.query(
       `UPDATE urls SET visits = $1 WHERE "shortUrl" = $2;`,
       [numberVisits, shortUrl]
     );
 
-    res.status(200).send();
+    res.redirect(shortUrlExist.rows[0].url);
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
