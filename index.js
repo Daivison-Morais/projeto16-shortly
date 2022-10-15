@@ -6,7 +6,9 @@ import {
   getOneUrl,
   getOpenUrl,
   deleteUrl,
+  getUsersMe,
 } from "./src/controllers/controllersUrls.js";
+import getRanking from "./src/controllers/controllersRanking.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -20,8 +22,11 @@ app.post("/signin", getSignin);
 app.post("/urls/shorten", postShorten);
 app.get("/urls/:id", getOneUrl);
 app.get("/urls/open/:shortUrl", getOpenUrl);
-
 app.delete("/urls/:id", deleteUrl);
+
+app.get("/users/me", getUsersMe);
+
+app.get("/ranking", getRanking);
 
 app.get("/status", async (req, res) => {
   res.send("ooooook");

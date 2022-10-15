@@ -94,21 +94,24 @@ async function deleteUrl(req, res) {
   }
 
   try {
-    const { userId } = (
+    const session = (
       await connection.query(
         `SELECT "userId" FROM sessions WHERE token = $1;`,
         [token]
       )
-    ).rows[0];
+    ).rows;
+    if (session.length === 0) {
+      return res.status(404).send({ error: "sessão não encontrada" });
+    }
 
     const urlEhUser = (
       await connection.query(`SELECT * FROM urls WHERE "id" = $1;`, [urlId])
     ).rows;
     if (urlEhUser.length === 0) {
-      return res.sendStatus(409);
+      return res.sendStatus(404);
     }
 
-    if (urlEhUser[0].userId !== userId) {
+    if (urlEhUser[0].userId !== session[0].userId) {
       return res.status(401).send({ error: "url não pertence ao usuário" });
     }
 
@@ -120,4 +123,50 @@ async function deleteUrl(req, res) {
   }
 }
 
-export { postShorten, getOneUrl, getOpenUrl, deleteUrl };
+async function getUsersMe(req, res) {
+  const token = req.headers.authorization?.replace("Bearer ", "");
+  if (!token) {
+    return res.sendStatus(401);
+  }
+
+  try {
+    const session = (
+      await connection.query(
+        `SELECT "userId" FROM sessions WHERE token = $1;`,
+        [token]
+      )
+    ).rows;
+    if (session.length === 0) {
+      return res.status(404).send({ error: "sessão não encontrada" });
+    }
+
+    const user = await connection.query(
+      `SELECT users.id, users.name, urls.* FROM users JOIN urls ON users.id = urls."userId" WHERE urls."userId" = $1;`,
+      [session[0].userId]
+    );
+
+    let maxVisits = 0;
+    user.rows.forEach((value) => (maxVisits = maxVisits + value.visits));
+
+    const details = user?.rows.map((value) => ({
+      id: value.id,
+      shortUrl: value.shortUrl,
+      url: value.url,
+      visitCount: value.visits,
+    }));
+
+    const result = {
+      id: user.rows[0].userId,
+      name: user.rows[0].name,
+      visitCount: maxVisits,
+      shortenedUrls: details,
+    };
+
+    res.status(200).send(result);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+}
+
+export { postShorten, getOneUrl, getOpenUrl, deleteUrl, getUsersMe };
