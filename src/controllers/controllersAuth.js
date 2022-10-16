@@ -2,8 +2,6 @@ import connection from "../conectionPG.js";
 import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcrypt";
 
-const token = uuidv4();
-
 async function postSignup(req, res) {
   const { name, email, password, confirmPassword } = req.body;
 
@@ -46,8 +44,9 @@ async function getSignin(req, res) {
     }
     const isValid = bcrypt.compareSync(password, findUser[0].password);
     if (!isValid) {
-      return res.status(401).send({ error: "Senha inválida" });
+      return res.status(401).send({ error: "email e/ou senha inválidos" });
     }
+    const token = uuidv4();
 
     await connection.query(
       `INSERT INTO sessions ("userId", token) VALUES ($1, $2);`,
