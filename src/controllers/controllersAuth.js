@@ -1,28 +1,14 @@
 import connection from "../conectionPG.js";
-import joi from "joi";
 import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcrypt";
 
 const token = uuidv4();
-
-const postSignupSchema = joi.object({
-  name: joi.string().required(),
-  email: joi.string().email().required(),
-  password: joi.string().required(),
-  confirmPassword: joi.string().required(),
-});
 
 async function postSignup(req, res) {
   const { name, email, password, confirmPassword } = req.body;
 
   if (password !== confirmPassword) {
     return res.status(409).send({ erro: "senhas imcompatíveis!" });
-  }
-
-  const validation = postSignupSchema.validate(req.body, { abortEarly: false });
-  if (validation.error) {
-    const errors = validation.error.details.map((value) => value.message);
-    return res.status(422).send(errors);
   }
 
   try {
@@ -47,19 +33,8 @@ async function postSignup(req, res) {
   }
 }
 
-const postSigninSchema = joi.object({
-  email: joi.string().email().required(),
-  password: joi.string().required(),
-});
-
 async function getSignin(req, res) {
   const { email, password } = req.body;
-
-  const validation = postSigninSchema.validate(req.body, { abortEarly: false });
-  if (validation.error) {
-    const errors = validation.error.details.map((value) => value.message);
-    return res.status(422).send(errors);
-  }
 
   try {
     const findUser = (

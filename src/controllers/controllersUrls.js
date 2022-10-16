@@ -73,11 +73,7 @@ async function getOpenUrl(req, res) {
 
 async function deleteUrl(req, res) {
   const urlId = req.params.id;
-
-  const token = req.headers.authorization?.replace("Bearer ", "");
-  if (!token) {
-    return res.sendStatus(401);
-  }
+  const token = res.locals.token;
 
   try {
     const session = (
@@ -110,10 +106,7 @@ async function deleteUrl(req, res) {
 }
 
 async function getUsersMe(req, res) {
-  const token = req.headers.authorization?.replace("Bearer ", "");
-  if (!token) {
-    return res.sendStatus(401);
-  }
+  const token = res.locals.token;
 
   try {
     const session = (
