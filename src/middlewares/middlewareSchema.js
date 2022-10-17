@@ -1,19 +1,19 @@
 import joi from "joi";
 
 const postSignupSchema = joi.object({
-  name: joi.string().required(),
-  email: joi.string().email().required(),
+  name: joi.string().trim().required(),
+  email: joi.string().email().trim().required(),
   password: joi.string().min(5).required(),
   confirmPassword: joi.string().min(5).required(),
 });
 
-const postShortenSchema = joi.object({
-  url: joi.string().uri().required(),
+const postSigninSchema = joi.object({
+  email: joi.string().email().trim().required(),
+  password: joi.string().required(),
 });
 
-const postSigninSchema = joi.object({
-  email: joi.string().email().required(),
-  password: joi.string().required(),
+const postShortenSchema = joi.object({
+  url: joi.string().uri().required(),
 });
 
 function signupSchema(req, res, next) {

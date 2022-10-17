@@ -1,6 +1,6 @@
-import pkg from "pg";
+import pg from "pg";
 
-const { Pool } = pkg;
+const { Pool } = pg;
 
 const databaseConfig = {
   connectionString: process.env.DATABASE_URL,
@@ -8,6 +8,7 @@ const databaseConfig = {
     rejectUnauthorized: false,
   },
 };
+
 const connection = new Pool(databaseConfig);
 
 export default connection;
