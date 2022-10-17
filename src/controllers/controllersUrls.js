@@ -124,6 +124,10 @@ async function getUsersMe(req, res) {
       [session[0].userId]
     );
 
+    if (user.rows[0]?.url === undefined) {
+      return res.status(404).send({ erro: "sem links encurtados" });
+    }
+
     let maxVisits = 0;
     user.rows.forEach((value) => (maxVisits = maxVisits + value.visits));
 
