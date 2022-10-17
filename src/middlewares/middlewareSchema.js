@@ -42,6 +42,12 @@ function validUrl(req, res, next) {
     const error = validation.error.details[0].message;
     return res.status(422).send(error);
   }
+
+  const regexUrl = /^(ftp|http|https):\/\/[^ "]+$/.test(url);
+  if (!regexUrl) {
+    return res.status(422).send("url invalida");
+  }
+
   res.locals.url = url;
   next();
 }
