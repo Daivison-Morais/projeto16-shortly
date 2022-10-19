@@ -1,6 +1,7 @@
 import connection from "../conectionPG.js";
 import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcrypt";
+import * as repositoriesAuth from "../repositories/repositoriesAuth.js";
 
 async function postSignup(req, res) {
   const { name, email, password, confirmPassword } = req.body;
@@ -19,10 +20,11 @@ async function postSignup(req, res) {
 
     const passwordEncrypted = bcrypt.hashSync(password, 10);
 
-    await connection.query(
-      `INSERT INTO users (name, email, password) VALUES ($1, $2, $3);`,
-      [name, email, passwordEncrypted]
-    );
+    const result = await repositoriesAuth.insertUser({
+      name,
+      email,
+      passwordEncrypted,
+    });
 
     res.status(201).send("cadastro realizado com sucesso!");
   } catch (error) {
